@@ -1,0 +1,31 @@
+# Dependencies
+node_modules/
+backend/venv/
+backend/.venv/
+venv/
+.venv/
+
+# Build & Output
+dist/
+build/
+.pytest_cache/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Local Databases & Logs
+*.db
+backend/his_app.db
+backend/test_his.db
+test_his.db
+test_output.txt
+test_runner.py
+
+# Environment & IDE
+.env
+.env.local
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
