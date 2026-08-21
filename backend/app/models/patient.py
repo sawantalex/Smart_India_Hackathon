@@ -22,3 +22,7 @@ class Patient(Base):
     assessments = relationship("TriageAssessment", back_populates="patient", cascade="all, delete-orphan")
     consents = relationship("PatientConsent", back_populates="patient", cascade="all, delete-orphan")
     referrals = relationship("Referral", back_populates="patient", cascade="all, delete-orphan")
+    encounters = relationship("Encounter", back_populates="patient", cascade="all, delete-orphan")
+    appointments = relationship("Appointment", back_populates="patient", cascade="all, delete-orphan")
+    diagnostic_orders = relationship("DiagnosticOrder", back_populates="patient", cascade="all, delete-orphan")
+    followups = relationship("HighRiskFollowUp", back_populates="patient", cascade="all, delete-orphan")

@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import RedirectResponse
 from app.core.config import settings
 from app.core.database import engine, Base, SessionLocal
 from app.core.middleware import SecurityHeadersMiddleware
@@ -11,10 +12,16 @@ from app.core.security import get_password_hash
 
 app = FastAPI(
     title=settings.PROJECT_NAME,
-    openapi_url=f"{settings.API_V1_STR}/openapi.json" if settings.ENVIRONMENT == "development" else None,
-    docs_url=f"{settings.API_V1_STR}/docs" if settings.ENVIRONMENT == "development" else None,
+    openapi_url=f"{settings.API_V1_STR}/openapi.json" if settings.ENVIRONMENT == "development" else "/openapi.json",
+    docs_url="/docs" if settings.ENVIRONMENT == "development" else "/docs",
     redoc_url=None
 )
+
+# Redirect alternative docs paths to /docs to prevent 404 Not Found errors
+@app.get("/api/docs", include_in_schema=False)
+@app.get("/api/v1/docs", include_in_schema=False)
+def redirect_to_docs():
+    return RedirectResponse(url="/docs")
 
 # CORS middleware
 if settings.BACKEND_CORS_ORIGINS:
@@ -40,10 +47,30 @@ def startup_event():
     # Seed DEMO DATA safely using synthetic records
     db = SessionLocal()
     try:
-        if db.query(User).count() == 0:
-            pw_hash = get_password_hash("password123")
-            
-            # Demo Patient
+        pw_hash = get_password_hash("password123")
+        admin_pw_hash = get_password_hash("admin")
+        
+        # Ensure 'admin' user exists with password 'admin'
+        existing_admin = db.query(User).filter(User.username == "admin").first()
+        if not existing_admin:
+            admin_user = User(username="admin", email="admin@example.com", phone="9876543212", hashed_password=admin_pw_hash, role=UserRole.ADMIN)
+            db.add(admin_user)
+            db.commit()
+        else:
+            existing_admin.hashed_password = admin_pw_hash
+            db.commit()
+
+        # Ensure 'admin_demo' user exists with password 'admin'
+        existing_admin_demo = db.query(User).filter(User.username == "admin_demo").first()
+        if not existing_admin_demo:
+            admin_demo_user = User(username="admin_demo", email="admin_demo@example.com", phone="9876543213", hashed_password=admin_pw_hash, role=UserRole.ADMIN)
+            db.add(admin_demo_user)
+            db.commit()
+        else:
+            existing_admin_demo.hashed_password = admin_pw_hash
+            db.commit()
+
+        if db.query(User).filter(User.username == "patient_demo").count() == 0:
             patient_user = User(username="patient_demo", email="patient@example.com", phone="9876543210", hashed_password=pw_hash, role=UserRole.PATIENT)
             db.add(patient_user)
             db.commit()
@@ -51,8 +78,8 @@ def startup_event():
             
             patient_profile = Patient(user_id=patient_user.id, patient_code="PAT-DEMO-001", full_name="Ramesh Kumar (Demo)", age_group="18-59", preferred_language="hi", district="Pune", village_or_town="Shivajinagar")
             db.add(patient_profile)
-            
-            # Demo Facilities
+
+        if db.query(Facility).count() == 0:
             phc = Facility(
                 name="Shivajinagar Primary Health Centre (PHC)",
                 facility_type="PHC",
@@ -81,20 +108,15 @@ def startup_event():
             )
             db.add_all([phc, dh])
             db.commit()
-            db.refresh(phc)
 
-            # Demo Health Worker
+        if db.query(User).filter(User.username == "worker_demo").count() == 0:
             worker_user = User(username="worker_demo", email="worker@example.com", phone="9876543211", hashed_password=pw_hash, role=UserRole.HEALTH_WORKER)
             db.add(worker_user)
             db.commit()
             db.refresh(worker_user)
 
-            worker_profile = HealthcareWorker(user_id=worker_user.id, worker_code="HW-DEMO-001", full_name="Sunita Patil (ASHA Worker)", qualification="ASHA Worker", assigned_facility_id=phc.id, phone="9876543211")
+            worker_profile = HealthcareWorker(user_id=worker_user.id, worker_code="HW-DEMO-001", full_name="Sunita Patil (ASHA Worker)", qualification="ASHA Worker", assigned_facility_id=1, phone="9876543211")
             db.add(worker_profile)
-
-            # Demo Admin
-            admin_user = User(username="admin_demo", email="admin@example.com", phone="9876543212", hashed_password=pw_hash, role=UserRole.ADMIN)
-            db.add(admin_user)
             db.commit()
 
     finally:

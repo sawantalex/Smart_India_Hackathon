@@ -28,30 +28,30 @@ export const LandingScreen: React.FC<LandingScreenProps> = ({ onNavigate }) => {
         <div className="relative z-10 max-w-3xl">
           <div className="inline-flex items-center gap-2 px-3 py-1 bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 rounded-full text-xs font-semibold mb-4">
             <Sparkles className="w-3.5 h-3.5" />
-            <span>Multilingual • Offline-Capable • Safety-Gated</span>
+            <span>{t('badge_tag')}</span>
           </div>
 
           <h2 className="text-3xl sm:text-5xl font-extrabold text-slate-50 tracking-tight leading-tight mb-4">
-            Multilingual Voice Triage for <span className="text-transparent bg-clip-text bg-gradient-to-r from-teal-400 to-emerald-300">Rural Healthcare Access</span>
+            {t('hero_title_1')}<span className="text-transparent bg-clip-text bg-gradient-to-r from-teal-400 to-emerald-300">{t('hero_title_2')}</span>
           </h2>
 
           <p className="text-base sm:text-lg text-slate-300 mb-8 leading-relaxed">
-            Accessible, voice-first preliminary symptom evaluation, deterministic emergency escalation, and verified healthcare facility referral designed for low-bandwidth environments.
+            {t('hero_desc')}
           </p>
 
           <div className="flex flex-wrap gap-4">
             <button
               onClick={() => onNavigate('VOICE_ASSISTANT')}
-              className="btn-large bg-gradient-to-r from-teal-500 to-emerald-500 hover:from-teal-400 hover:to-emerald-400 text-slate-950 font-extrabold shadow-xl shadow-teal-500/25"
+              className="btn-large bg-gradient-to-r from-teal-500 to-emerald-500 hover:from-teal-400 hover:to-emerald-400 text-slate-950 font-extrabold shadow-xl shadow-teal-500/25 flex items-center gap-2"
             >
               <Mic className="w-6 h-6" />
-              <span>Start Voice Triage</span>
+              <span>{t('start_voice_triage')}</span>
               <ChevronRight className="w-5 h-5 ml-1" />
             </button>
 
             <button
               onClick={() => onNavigate('EMERGENCY_WARNING')}
-              className="btn-large bg-red-600 hover:bg-red-500 text-white font-bold shadow-xl shadow-red-600/30 emergency-pulse"
+              className="btn-large bg-red-600 hover:bg-red-500 text-white font-bold shadow-xl shadow-red-600/30 emergency-pulse flex items-center gap-2"
             >
               <PhoneCall className="w-6 h-6" />
               <span>{t('emergency_button')}</span>
@@ -64,7 +64,7 @@ export const LandingScreen: React.FC<LandingScreenProps> = ({ onNavigate }) => {
       <div className="bg-amber-500/10 border border-amber-500/30 rounded-2xl p-4 sm:p-5 flex items-start gap-3 text-amber-200">
         <ShieldAlert className="w-6 h-6 text-amber-400 shrink-0 mt-0.5" />
         <div>
-          <h4 className="font-bold text-amber-300 text-sm mb-1">MANDATORY SAFETY NOTICE & DISCLAIMER</h4>
+          <h4 className="font-bold text-amber-300 text-sm mb-1">{t('disclaimer_title')}</h4>
           <p className="text-xs leading-relaxed">{t('disclaimer')}</p>
         </div>
       </div>
@@ -80,13 +80,13 @@ export const LandingScreen: React.FC<LandingScreenProps> = ({ onNavigate }) => {
             <HeartPulse className="w-6 h-6" />
           </div>
           <h3 className="text-xl font-bold text-slate-100 mb-2 group-hover:text-teal-300">
-            Citizen App & Voice Triage
+            {t('citizen_card_title')}
           </h3>
           <p className="text-sm text-slate-400 mb-4">
-            Voice-first symptom recording in Hindi, Marathi, or English. View risk levels and nearby clinics.
+            {t('citizen_card_desc')}
           </p>
           <div className="text-xs font-bold text-teal-400 flex items-center gap-1">
-            <span>Enter Citizen Portal</span>
+            <span>{t('citizen_card_action')}</span>
             <ChevronRight className="w-4 h-4" />
           </div>
         </div>
@@ -100,13 +100,13 @@ export const LandingScreen: React.FC<LandingScreenProps> = ({ onNavigate }) => {
             <Stethoscope className="w-6 h-6" />
           </div>
           <h3 className="text-xl font-bold text-slate-100 mb-2 group-hover:text-emerald-300">
-            Healthcare Worker Portal
+            {t('worker_card_title')}
           </h3>
           <p className="text-sm text-slate-400 mb-4">
-            ASHA worker case queue, clinical risk overrides, patient referrals, and follow-ups.
+            {t('worker_card_desc')}
           </p>
           <div className="text-xs font-bold text-emerald-400 flex items-center gap-1">
-            <span>Enter Worker Portal (ASHA)</span>
+            <span>{t('worker_card_action')}</span>
             <ChevronRight className="w-4 h-4" />
           </div>
         </div>
@@ -120,13 +120,13 @@ export const LandingScreen: React.FC<LandingScreenProps> = ({ onNavigate }) => {
             <UserCheck className="w-6 h-6" />
           </div>
           <h3 className="text-xl font-bold text-slate-100 mb-2 group-hover:text-indigo-300">
-            Analytics & Audit Trail
+            {t('analytics_card_title')}
           </h3>
           <p className="text-sm text-slate-400 mb-4">
-            Aggregated de-identified health trends, anonymization cohort limits, and audit logs.
+            {t('analytics_card_desc')}
           </p>
           <div className="text-xs font-bold text-indigo-400 flex items-center gap-1">
-            <span>View System Dashboard</span>
+            <span>{t('analytics_card_action')}</span>
             <ChevronRight className="w-4 h-4" />
           </div>
         </div>

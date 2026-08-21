@@ -4,7 +4,7 @@ from pydantic import AnyHttpUrl, validator
 from pydantic_settings import BaseSettings
 
 class Settings(BaseSettings):
-    PROJECT_NAME: str = "AI Rural Healthcare System"
+    PROJECT_NAME: str = "SwasthyaSetu - Integrated Rural Healthcare System"
     API_V1_STR: str = "/api/v1"
     ENVIRONMENT: str = "development"
 

@@ -3,7 +3,7 @@ import { useLanguage } from '../context/LanguageContext';
 import { ApiService } from '../services/api';
 import { ScreenName, SymptomInput, TriageAssessment } from '../types';
 import { VoiceAssistant } from '../components/VoiceAssistant';
-import { AlertTriangle, CheckCircle, ShieldAlert, PhoneCall, Building2, ArrowRight, Activity, Heart, Stethoscope } from 'lucide-react';
+import { AlertTriangle, ShieldAlert, PhoneCall, Building2, Activity, Stethoscope, CheckCircle } from 'lucide-react';
 import { VoiceService } from '../services/voice';
 
 interface TriageWizardScreenProps {
@@ -45,10 +45,32 @@ export const TriageWizardScreen: React.FC<TriageWizardScreenProps> = ({ onNaviga
     setLoading(true);
     const symptomsToSubmit = customTranscript ? [customTranscript] : selectedSymptoms.length > 0 ? selectedSymptoms : [symptomText || 'unspecified symptoms'];
     
+    // Auto-detect severity from transcript or selected symptoms text
+    let detectedSeverity = severity;
+    const lowerText = (customTranscript || symptomText || selectedSymptoms.join(' ')).toLowerCase();
+    
+    if (
+      lowerText.includes('chest') || lowerText.includes('breath') || lowerText.includes('unconscious') || 
+      lowerText.includes('सीने') || lowerText.includes('सांस') || lowerText.includes('छातीत') || lowerText.includes('बेहोश')
+    ) {
+      detectedSeverity = 'UNBEARABLE';
+    } else if (
+      lowerText.includes('tez') || lowerText.includes('high') || lowerText.includes('severe') || 
+      lowerText.includes('तेज़') || lowerText.includes('तीव्र') || lowerText.includes('बहुत') || lowerText.includes('जास्त')
+    ) {
+      detectedSeverity = 'SEVERE';
+    } else if (
+      lowerText.includes('mild') || lowerText.includes('halka') || lowerText.includes('thoda') || 
+      lowerText.includes('हल्का') || lowerText.includes('थोड़ा') || lowerText.includes('मामुली')
+    ) {
+      detectedSeverity = 'MILD';
+    }
+
     const input: SymptomInput = {
       symptoms: symptomsToSubmit,
+      raw_transcript: customTranscript || symptomText,
       duration,
-      severity,
+      severity: detectedSeverity,
       age_group: ageGroup,
       associated_symptoms: [],
       red_flags: [],
@@ -129,6 +151,7 @@ export const TriageWizardScreen: React.FC<TriageWizardScreenProps> = ({ onNaviga
 
   // Screen 8: Assessment Result Screen
   if (activeScreen === 'ASSESSMENT_RESULT' && assessmentResult) {
+    const isEmergency = assessmentResult.risk_category === 'EMERGENCY';
     const isHigh = assessmentResult.risk_category === 'HIGH';
     const isModerate = assessmentResult.risk_category === 'MODERATE';
 
@@ -142,6 +165,7 @@ export const TriageWizardScreen: React.FC<TriageWizardScreenProps> = ({ onNaviga
               <h2 className="text-2xl font-bold text-slate-100">Symptom Evaluation Complete</h2>
             </div>
             <div className={`px-4 py-2 rounded-2xl font-extrabold text-sm flex items-center gap-2 ${
+              isEmergency ? 'bg-red-500/20 text-red-300 border border-red-500/40' :
               isHigh ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40' :
               isModerate ? 'bg-teal-500/20 text-teal-300 border border-teal-500/40' :
               'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40'
@@ -260,7 +284,7 @@ export const TriageWizardScreen: React.FC<TriageWizardScreenProps> = ({ onNaviga
 
         {/* Text Area Backup */}
         <div>
-          <label className="block text-xs font-semibold text-slate-300 mb-2">OrDescribe in detail</label>
+          <label className="block text-xs font-semibold text-slate-300 mb-2">Or Describe in detail</label>
           <textarea
             value={symptomText}
             onChange={(e) => setSymptomText(e.target.value)}

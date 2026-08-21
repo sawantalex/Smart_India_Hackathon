@@ -8,10 +8,10 @@ import os
 # Ensure backend app is in python path
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
+from app.core.security import get_password_hash, create_access_token
 from app.main import app
 from app.core.database import Base, get_db
 from app.models import *
-from app.core.security import get_password_hash, create_access_token
 
 SQLALCHEMY_DATABASE_URL = "sqlite:///./test_his.db"
 

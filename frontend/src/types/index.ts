@@ -40,7 +40,16 @@ export type ScreenName =
   | 'ANALYTICS'
   | 'ADMIN_SETTINGS'
   | 'PROFILE'
-  | 'OFFLINE_SYNC_STATUS';
+  | 'OFFLINE_SYNC_STATUS'
+  // Extended integrated healthcare screens
+  | 'PATIENT_TIMELINE'
+  | 'APPOINTMENT_BOOKING'
+  | 'QUEUE_MANAGEMENT'
+  | 'TELECONSULTATION'
+  | 'DIAGNOSTIC_TRACKER'
+  | 'MEDICINE_SEARCH'
+  | 'HIGH_RISK_WORKFLOWS'
+  | 'QUALITY_DASHBOARD';
 
 export interface Patient {
   id: number;
@@ -114,4 +123,99 @@ export interface Referral {
   notes?: string;
   created_at: string;
   updated_at: string;
+}
+
+export interface Encounter {
+  id: number;
+  encounter_code: string;
+  patient_id: number;
+  facility_id?: number;
+  facility_name?: string;
+  worker_id?: number;
+  encounter_type: string;
+  title: string;
+  summary: string;
+  clinical_notes?: string;
+  urgency: UrgencyLevel;
+  created_at: string;
+}
+
+export interface Appointment {
+  id: number;
+  appointment_code: string;
+  patient_id: number;
+  facility_id: number;
+  facility_name?: string;
+  department: string;
+  appointment_date: string;
+  reason: string;
+  status: string;
+  created_at: string;
+}
+
+export interface QueueToken {
+  id: number;
+  token_number: string;
+  facility_id: number;
+  facility_name?: string;
+  department: string;
+  priority: string;
+  status: string;
+  position: number;
+  estimated_wait_minutes: number;
+  created_at: string;
+}
+
+export interface ConsultationSession {
+  id: number;
+  session_code: string;
+  patient_id: number;
+  facility_id: number;
+  facility_name?: string;
+  specialty: string;
+  status: string;
+  reason: string;
+  clinical_summary: string;
+  is_ai_generated_summary: string;
+  clinician_notes?: string;
+  created_at: string;
+}
+
+export interface DiagnosticOrder {
+  id: number;
+  order_code: string;
+  patient_id: number;
+  facility_id: number;
+  facility_name?: string;
+  test_name: string;
+  reason: string;
+  status: string;
+  created_at: string;
+}
+
+export interface MedicineSearchItem {
+  id: number;
+  name: string;
+  generic_name: string;
+  category: string;
+  dosage_form: string;
+  facility_id: number;
+  facility_name: string;
+  facility_district: string;
+  status: string;
+  last_updated: string;
+}
+
+export interface HighRiskFollowUp {
+  id: number;
+  followup_code: string;
+  patient_id: number;
+  category: string;
+  priority: string;
+  scheduled_date: string;
+  reason: string;
+  status: string;
+  contact_method: string;
+  notes?: string;
+  created_at: string;
 }

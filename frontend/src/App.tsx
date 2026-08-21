@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { AuthProvider, useAuth } from './context/AuthContext';
-import { LanguageProvider } from './context/LanguageContext';
+import { LanguageProvider, useLanguage } from './context/LanguageContext';
+import { ThemeProvider } from './context/ThemeContext';
 import { ScreenName } from './types';
 import { Header } from './components/Header';
 import { OfflineBanner } from './components/OfflineBanner';
@@ -13,13 +14,59 @@ import { TriageWizardScreen } from './pages/TriageWizardScreen';
 import { FacilityAndReferralScreens } from './pages/FacilityAndReferralScreens';
 import { WorkerDashboardScreens } from './pages/WorkerDashboardScreens';
 import { AdminAndSystemScreens } from './pages/AdminAndSystemScreens';
+import { IntegratedCareScreens } from './pages/IntegratedCareScreens';
 
-import { HeartPulse, Stethoscope, BarChart3, Database, Globe, Mic, Shield } from 'lucide-react';
+import { HeartPulse, Stethoscope, BarChart3, Calendar, Pill, Video, ShieldCheck } from 'lucide-react';
+
+const VALID_SCREENS: ScreenName[] = [
+  'LANDING',
+  'LOGIN',
+  'REGISTER',
+  'WORKER_LOGIN',
+  'ADMIN_LOGIN',
+  'PROFILE',
+  'LANGUAGE_SELECT',
+  'PATIENT_DASHBOARD',
+  'VOICE_ASSISTANT',
+  'SYMPTOM_QUESTIONNAIRE',
+  'ASSESSMENT_RESULT',
+  'EMERGENCY_WARNING',
+  'NEARBY_FACILITIES',
+  'REFERRAL_REQUEST',
+  'PATIENT_HISTORY',
+  'CONSENT_PRIVACY',
+  'NOTIFICATIONS',
+  'WORKER_DASHBOARD',
+  'PATIENT_CASES',
+  'PATIENT_DETAILS',
+  'REFERRAL_MANAGEMENT',
+  'FOLLOWUP_MANAGEMENT',
+  'ANALYTICS',
+  'ADMIN_SETTINGS',
+  'OFFLINE_SYNC_STATUS',
+  'PATIENT_TIMELINE',
+  'APPOINTMENT_BOOKING',
+  'QUEUE_MANAGEMENT',
+  'TELECONSULTATION',
+  'DIAGNOSTIC_TRACKER',
+  'MEDICINE_SEARCH',
+  'HIGH_RISK_WORKFLOWS',
+  'QUALITY_DASHBOARD'
+];
+
+const getScreenFromHash = (): ScreenName => {
+  const hash = window.location.hash.replace('#', '').trim();
+  if (hash && VALID_SCREENS.includes(hash as ScreenName)) {
+    return hash as ScreenName;
+  }
+  return 'LANDING';
+};
 
 const MainLayout: React.FC = () => {
-  const [currentScreen, setCurrentScreen] = useState<ScreenName>('LANDING');
+  const [currentScreen, setCurrentScreen] = useState<ScreenName>(getScreenFromHash());
   const [isOnline, setIsOnline] = useState(navigator.onLine);
   const { role } = useAuth();
+  const { t } = useLanguage();
 
   useEffect(() => {
     const handleOnline = () => setIsOnline(true);
@@ -28,15 +75,46 @@ const MainLayout: React.FC = () => {
     window.addEventListener('online', handleOnline);
     window.addEventListener('offline', handleOffline);
 
+    const initialScreen = getScreenFromHash();
+    if (!window.history.state || window.history.state.screen !== initialScreen) {
+      window.history.replaceState({ screen: initialScreen }, '', `#${initialScreen}`);
+    }
+
+    const handlePopState = (event: PopStateEvent) => {
+      if (event.state && event.state.screen && VALID_SCREENS.includes(event.state.screen)) {
+        setCurrentScreen(event.state.screen as ScreenName);
+      } else {
+        const screenFromHash = getScreenFromHash();
+        setCurrentScreen(screenFromHash);
+      }
+    };
+
+    window.addEventListener('popstate', handlePopState);
+    window.addEventListener('hashchange', handlePopState);
+
     return () => {
       window.removeEventListener('online', handleOnline);
       window.removeEventListener('offline', handleOffline);
+      window.removeEventListener('popstate', handlePopState);
+      window.removeEventListener('hashchange', handlePopState);
     };
   }, []);
 
   const navigateTo = (screen: ScreenName) => {
-    setCurrentScreen(screen);
+    const targetScreen = VALID_SCREENS.includes(screen) ? screen : 'LANDING';
+    if (targetScreen !== currentScreen) {
+      setCurrentScreen(targetScreen);
+      window.history.pushState({ screen: targetScreen }, '', `#${targetScreen}`);
+    }
     window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const handleAdminClick = () => {
+    if (role === 'ADMIN') {
+      navigateTo('ANALYTICS');
+    } else {
+      navigateTo('ADMIN_LOGIN');
+    }
   };
 
   const renderScreen = () => {
@@ -50,6 +128,8 @@ const MainLayout: React.FC = () => {
         return <AuthScreens onNavigate={navigateTo} screenMode="REGISTER" />;
       case 'WORKER_LOGIN':
         return <AuthScreens onNavigate={navigateTo} screenMode="WORKER_LOGIN" />;
+      case 'ADMIN_LOGIN':
+        return <AuthScreens onNavigate={navigateTo} screenMode="ADMIN_LOGIN" />;
       case 'PROFILE':
         return <AuthScreens onNavigate={navigateTo} screenMode="PROFILE" />;
 
@@ -90,11 +170,24 @@ const MainLayout: React.FC = () => {
         return <WorkerDashboardScreens onNavigate={navigateTo} activeScreen="FOLLOWUP_MANAGEMENT" />;
 
       case 'ANALYTICS':
-        return <AdminAndSystemScreens onNavigate={navigateTo} activeScreen="ANALYTICS" isOnline={isOnline} />;
       case 'ADMIN_SETTINGS':
-        return <AdminAndSystemScreens onNavigate={navigateTo} activeScreen="ADMIN_SETTINGS" isOnline={isOnline} />;
+        if (role !== 'ADMIN') {
+          return <AuthScreens onNavigate={navigateTo} screenMode="ADMIN_LOGIN" />;
+        }
+        return <AdminAndSystemScreens onNavigate={navigateTo} activeScreen={currentScreen} isOnline={isOnline} />;
+
       case 'OFFLINE_SYNC_STATUS':
         return <AdminAndSystemScreens onNavigate={navigateTo} activeScreen="OFFLINE_SYNC_STATUS" isOnline={isOnline} />;
+
+      case 'PATIENT_TIMELINE':
+      case 'APPOINTMENT_BOOKING':
+      case 'QUEUE_MANAGEMENT':
+      case 'TELECONSULTATION':
+      case 'DIAGNOSTIC_TRACKER':
+      case 'MEDICINE_SEARCH':
+      case 'HIGH_RISK_WORKFLOWS':
+      case 'QUALITY_DASHBOARD':
+        return <IntegratedCareScreens onNavigate={navigateTo} activeScreen={currentScreen} />;
 
       default:
         return <LandingScreen onNavigate={navigateTo} />;
@@ -102,7 +195,7 @@ const MainLayout: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans">
+    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans transition-colors duration-300">
       <Header onNavigate={navigateTo} isOnline={isOnline} />
       <OfflineBanner isOnline={isOnline} />
 
@@ -112,30 +205,46 @@ const MainLayout: React.FC = () => {
       </main>
 
       {/* Global Quick Action Navigation Bar */}
-      <nav className="bg-slate-900/90 border-t border-slate-800 backdrop-blur-md sticky bottom-0 z-40 px-4 py-2">
-        <div className="max-w-md mx-auto flex items-center justify-around text-[10px] sm:text-xs">
+      <nav className="bg-slate-900/90 border-t border-slate-800 backdrop-blur-md sticky bottom-0 z-40 px-4 py-2 transition-colors duration-300">
+        <div className="max-w-2xl mx-auto flex items-center justify-around text-[10px] sm:text-xs">
           <button
             onClick={() => navigateTo('PATIENT_DASHBOARD')}
             className={`flex flex-col items-center gap-1 font-semibold ${currentScreen === 'PATIENT_DASHBOARD' ? 'text-teal-400' : 'text-slate-400 hover:text-slate-200'}`}
           >
             <HeartPulse className="w-5 h-5" />
-            <span>Patient</span>
+            <span>{t('nav_patient')}</span>
           </button>
 
           <button
-            onClick={() => navigateTo('VOICE_ASSISTANT')}
-            className={`flex flex-col items-center gap-1 font-semibold ${currentScreen === 'VOICE_ASSISTANT' ? 'text-teal-400' : 'text-slate-400 hover:text-slate-200'}`}
+            onClick={() => navigateTo('PATIENT_TIMELINE')}
+            className={`flex flex-col items-center gap-1 font-semibold ${currentScreen === 'PATIENT_TIMELINE' ? 'text-teal-400' : 'text-slate-400 hover:text-slate-200'}`}
           >
-            <Mic className="w-5 h-5" />
-            <span>Voice Triage</span>
+            <HeartPulse className="w-5 h-5" />
+            <span>{t('nav_timeline')}</span>
           </button>
 
           <button
-            onClick={() => navigateTo('LANGUAGE_SELECT')}
-            className={`flex flex-col items-center gap-1 font-semibold ${currentScreen === 'LANGUAGE_SELECT' ? 'text-teal-400' : 'text-slate-400 hover:text-slate-200'}`}
+            onClick={() => navigateTo('APPOINTMENT_BOOKING')}
+            className={`flex flex-col items-center gap-1 font-semibold ${currentScreen === 'APPOINTMENT_BOOKING' || currentScreen === 'QUEUE_MANAGEMENT' ? 'text-teal-400' : 'text-slate-400 hover:text-slate-200'}`}
           >
-            <Globe className="w-5 h-5" />
-            <span>Language</span>
+            <Calendar className="w-5 h-5" />
+            <span>{t('nav_slots')}</span>
+          </button>
+
+          <button
+            onClick={() => navigateTo('TELECONSULTATION')}
+            className={`flex flex-col items-center gap-1 font-semibold ${currentScreen === 'TELECONSULTATION' ? 'text-violet-400' : 'text-slate-400 hover:text-slate-200'}`}
+          >
+            <Video className="w-5 h-5" />
+            <span>{t('nav_teleconsult')}</span>
+          </button>
+
+          <button
+            onClick={() => navigateTo('MEDICINE_SEARCH')}
+            className={`flex flex-col items-center gap-1 font-semibold ${currentScreen === 'MEDICINE_SEARCH' ? 'text-teal-400' : 'text-slate-400 hover:text-slate-200'}`}
+          >
+            <Pill className="w-5 h-5" />
+            <span>{t('nav_medicines')}</span>
           </button>
 
           <button
@@ -143,23 +252,23 @@ const MainLayout: React.FC = () => {
             className={`flex flex-col items-center gap-1 font-semibold ${currentScreen === 'WORKER_DASHBOARD' ? 'text-emerald-400' : 'text-slate-400 hover:text-slate-200'}`}
           >
             <Stethoscope className="w-5 h-5" />
-            <span>ASHA Worker</span>
+            <span>{t('nav_worker')}</span>
           </button>
 
           <button
-            onClick={() => navigateTo('ANALYTICS')}
-            className={`flex flex-col items-center gap-1 font-semibold ${currentScreen === 'ANALYTICS' ? 'text-indigo-400' : 'text-slate-400 hover:text-slate-200'}`}
+            onClick={handleAdminClick}
+            className={`flex flex-col items-center gap-1 font-semibold ${currentScreen === 'ANALYTICS' || currentScreen === 'ADMIN_SETTINGS' || currentScreen === 'ADMIN_LOGIN' ? 'text-indigo-400' : 'text-slate-400 hover:text-slate-200'}`}
+          >
+            <ShieldCheck className="w-5 h-5 text-indigo-400" />
+            <span>{t('nav_admin')}</span>
+          </button>
+
+          <button
+            onClick={() => navigateTo('QUALITY_DASHBOARD')}
+            className={`flex flex-col items-center gap-1 font-semibold ${currentScreen === 'QUALITY_DASHBOARD' ? 'text-indigo-400' : 'text-slate-400 hover:text-slate-200'}`}
           >
             <BarChart3 className="w-5 h-5" />
-            <span>Analytics</span>
-          </button>
-
-          <button
-            onClick={() => navigateTo('OFFLINE_SYNC_STATUS')}
-            className={`flex flex-col items-center gap-1 font-semibold ${currentScreen === 'OFFLINE_SYNC_STATUS' ? 'text-amber-400' : 'text-slate-400 hover:text-slate-200'}`}
-          >
-            <Database className="w-5 h-5" />
-            <span>Sync</span>
+            <span>{t('nav_quality')}</span>
           </button>
         </div>
       </nav>
@@ -169,11 +278,13 @@ const MainLayout: React.FC = () => {
 
 export const App: React.FC = () => {
   return (
-    <LanguageProvider>
-      <AuthProvider>
-        <MainLayout />
-      </AuthProvider>
-    </LanguageProvider>
+    <ThemeProvider>
+      <LanguageProvider>
+        <AuthProvider>
+          <MainLayout />
+        </AuthProvider>
+      </LanguageProvider>
+    </ThemeProvider>
   );
 };
 

@@ -1,0 +1,111 @@
+================================================================================
+          SWASTHYA SETU (स्वास्थ्यसेतु) - RURAL HEALTHCARE PLATFORM
+                   TECHNICAL DOCUMENTATION & VIVA PREPARATION GUIDE
+================================================================================
+
+1. PROJECT OVERVIEW
+--------------------------------------------------------------------------------
+Project Title: SwasthyaSetu (Integrated Rural Healthcare Access, Continuity and Quality Support System)
+Problem Statement: SIH Rural & Underserved Healthcare Solutions
+Primary Goal: Provide a secure, offline-first, multilingual, integrated healthcare platform ("SwasthyaSetu") designed for rural Sub-Centres, Primary Health Centres (PHCs), Community Health Centres (CHCs), and District Hospitals.
+
+Core Problems Solved by SwasthyaSetu:
+1. Long travel distances and excessive wait times at rural facilities.
+2. Shortage of specialists in remote villages.
+3. Irregular diagnostic availability and stockouts of essential medicines.
+4. Fragmented patient medical history and delayed referrals.
+5. Limited awareness and language barriers among rural citizens.
+6. Lack of system-level accountability and bottleneck tracking.
+
+
+2. COMPLETE TECH STACK USED IN SWASTHYA SETU
+--------------------------------------------------------------------------------
+A. BACKEND ARCHITECTURE
+   - Programming Language: Python (3.11+)
+   - Web Framework: FastAPI (Asynchronous, high-performance RESTful API framework)
+   - Data Validation: Pydantic v2 (Schema validation, payload serialization)
+   - ORM (Object-Relational Mapping): SQLAlchemy 2.0 (Relational database management)
+   - Security & Hashing: Passlib (Argon2id with Bcrypt fallback), PyJWT / python-jose (JSON Web Tokens)
+   - Testing Framework: Pytest with FastAPI TestClient
+
+B. DATABASE LAYER
+   - Primary Database (Development & Testing): SQLite (Lightweight, embedded SQL database stored in `his.db` / `test_his.db`)
+   - Production Database (Deployments): PostgreSQL (Enterprise relational database with ACID compliance)
+   - Offline Client Database: IndexedDB (Client-side browser storage for offline queueing & PWA synchronization)
+
+C. FRONTEND ARCHITECTURE
+   - Framework / Library: React 18 with TypeScript
+   - Build Tool & Dev Server: Vite
+   - Styling & UI: Tailwind CSS (Utility-first CSS with dark/light glassmorphic UI)
+   - Iconography: Lucide React
+   - Voice Assistance: Web Speech API (Browser-native speech recognition for Hindi, Marathi, English)
+
+D. CLINICAL SAFETY & AI LAYER
+   - Emergency Escalation: RedFlagEngine (100% deterministic safety rule engine for triage)
+   - Teleconsultation Assistant: SafeAILayer (Sanitizes AI clinical drafts, enforces mandatory clinician review disclaimers)
+
+E. INTEROPERABILITY & STANDARDS
+   - Standards Compliance: HL7 FHIR (Fast Healthcare Interoperability Resources) JSON converters
+   - Government Integration: ABDM (Ayushman Bharat Digital Mission) Sandbox Adapter prototype for ABHA number verification
+
+
+3. KEY FUNCTIONAL MODULES IN SWASTHYA SETU
+--------------------------------------------------------------------------------
+1. Multilingual & Voice Triage: Emergency escalation (RED/HIGH) with voice recognition in Hindi, Marathi, and English.
+2. Longitudinal Patient Record & Timeline: ABDM-aligned encounter history across Sub-Centres, PHCs, CHCs, and District Hospitals.
+3. Facility OPD Scheduling & Live Queue Token: Slot booking and real-time wait-time calculation (`estimated_wait_minutes`) to eliminate rural queueing.
+4. Assisted Teleconsultation: Connects ASHA/rural workers with district specialists via video sessions with AI clinical summary drafts.
+5. Diagnostic Test Ordering & Tracking: Facilitates ordering, tracking test result status, and flagging abnormal findings.
+6. Privacy-Preserving Medicine Availability Search: Allows citizens to check medicine availability (AVAILABLE/LIMITED/UNAVAILABLE) without exposing exact facility stock counts.
+7. High-Risk Care Continuity & Follow-Up: Maternal health (ANC), child immunization (booster tracking), chronic disease management, and post-referral tracking.
+8. Quality & Bottleneck Monitoring Dashboard: System-level metrics on OPD wait times, referral completion rates, diagnostic turnaround, and stockout alerts.
+
+
+4. COMPREHENSIVE VIVA QUESTIONS & ANSWERS (Q&A)
+--------------------------------------------------------------------------------
+
+Q1: What is the main objective of SwasthyaSetu?
+A1: SwasthyaSetu acts as a digital bridge ("Setu") for rural healthcare, connecting patients, ASHA workers, PHCs, and District Hospitals. It combines voice-assisted triage, longitudinal patient timelines, OPD slot booking, live queue tokens, teleconsultations, diagnostic tracking, privacy-preserving medicine search, and high-risk follow-up tracking to eliminate healthcare barriers in underserved communities.
+
+Q2: Which database is used in SwasthyaSetu and why?
+A2: In the current development and testing environment, SQLite (`his.db` / `test_his.db`) is used via SQLAlchemy ORM because it is lightweight, self-contained, and requires zero external server setup. For production deployment, the architecture is configured to seamlessly transition to PostgreSQL for multi-user concurrency and ACID guarantees. Client-side offline storage uses IndexedDB.
+
+Q3: Why did you use FastAPI for the backend instead of Django or Flask?
+A3: FastAPI provides asynchronous capabilities (`async`/`await`), automatic OpenAPI documentation generation, high speed (on par with NodeJS and Go), and strict type validation through Pydantic. It is ideal for REST APIs handling real-time queue tokens and mobile client synchronization.
+
+Q4: How does SwasthyaSetu handle AI safety during medical symptom triage?
+A4: Medical triage cannot rely solely on probabilistic AI/LLMs. The system uses a 100% deterministic rule engine called `RedFlagEngine`. If severe symptoms (e.g., severe chest pain, breathlessness, loss of consciousness) are detected, the system immediately bypasses non-critical flows and triggers emergency escalation.
+
+Q5: What is the role of `SafeAILayer` in the teleconsultation module?
+A5: `SafeAILayer` filters and sanitizes AI-generated clinical summaries during teleconsultations. It strips unverified medical diagnostics, appends mandatory clinical disclaimers, and ensures that the final medical notes must be explicitly reviewed, edited, and approved by a qualified medical officer.
+
+Q6: How does offline synchronization work in SwasthyaSetu for rural health workers in low-connectivity areas?
+A6: When an ASHA worker performs triage or registers a patient offline, the data is saved locally in IndexedDB as an event transaction. When connectivity returns, the PWA client flushes the queue to the backend `/api/v1/sync` endpoint, where idempotent transaction handling prevents duplicate records.
+
+Q7: What is the "Privacy-Preserving Medicine Availability Search"?
+A7: Public users searching for essential medicines can view high-level availability statuses (`AVAILABLE`, `LIMITED`, `UNAVAILABLE`) and facility locations, but exact stock inventory counts are kept hidden to protect facility security and prevent commercial exploitation while empowering citizens.
+
+Q8: How does the Live Queue Token system help rural patients?
+A8: Patients receive a digital queue token (`T-001`, `T-002`) with real-time updates on their queue position and estimated wait time (`estimated_wait_minutes`). This allows rural citizens to arrive at the PHC exactly when their turn approaches, preventing hours of waiting in crowded facility corridors.
+
+Q9: How is data security and user privacy enforced in SwasthyaSetu?
+A9: Authentication uses JWT tokens with Argon2id and Bcrypt password hashing. Role-Based Access Control (RBAC) ensures Patients can only view their own records, Health Workers can access assigned cases, and Admins oversee system analytics. Insecure direct object reference (IDOR) protection is enforced across all API endpoints.
+
+Q10: What standards does SwasthyaSetu follow for interoperability?
+A10: The backend includes an HL7 FHIR adapter (`app/integrations/fhir/adapter.py`) that exports Patient and Encounter data as FHIR JSON resources. It also includes an ABDM (Ayushman Bharat Digital Mission) sandbox prototype adapter for ABHA number verification.
+
+Q11: How does high-risk care continuity work?
+A11: The `HighRiskFollowUp` module categorizes vulnerable patients (Maternal High-Risk, Child Immunization, Chronic Disease, Post-Referral). It generates scheduled task reminders for ASHA workers to conduct home visits or phone calls, ensuring care continuity across facility tiers.
+
+Q12: What metrics are displayed on the Facility Quality Dashboard?
+A12: The dashboard tracks system performance indicators: average OPD wait times, referral completion percentages, maternal follow-up compliance, diagnostic test turnaround hours, and essential medicine stockout warnings.
+
+Q13: How was the backend application tested?
+A13: The project uses `pytest` for automated unit and integration testing. Tests verify authentication, RBAC authorization, emergency triage escalation, offline sync idempotency, and the 62-step end-to-end patient care scenario. All 15 automated test suites pass with 100% success.
+
+Q14: How is the React frontend structured?
+A14: The frontend is built with React 18, Vite, and TypeScript. It features a responsive layout with dark glassmorphic design, a bottom navigation bar for quick access (Patient, Timeline, Slots, Teleconsult, Medicines, ASHA Worker, Quality, Sync), and multilingual support powered by `LanguageContext`.
+
+Q15: How can SwasthyaSetu be scaled for nationwide government deployment?
+A15: The containerized FastAPI backend and React frontend can be deployed on cloud platforms (AWS/Azure/NIC Cloud) with PostgreSQL, Redis for session caching, and Kubernetes for horizontal auto-scaling, serving millions of rural sub-centres across districts.
+================================================================================
