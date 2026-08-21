@@ -1,7 +1,7 @@
 import { SymptomInput, TriageAssessment, Facility, Referral, UserRole } from '../types';
 import { queueOfflineEvent, getOfflineQueue, clearOfflineQueue } from '../offline/db';
 
-const API_BASE = '/api/v1';
+const API_BASE = ((import.meta as any).env?.VITE_API_BASE_URL) || '/api/v1';
 
 export class ApiService {
   private static getToken(): string | null {

@@ -89,14 +89,14 @@ const MainLayout: React.FC = () => {
       }
     };
 
-    window.addEventListener('popstate', handlePopState);
-    window.addEventListener('hashchange', handlePopState);
+    window.addEventListener('popstate', handlePopState as EventListener);
+    window.addEventListener('hashchange', handlePopState as EventListener);
 
     return () => {
       window.removeEventListener('online', handleOnline);
       window.removeEventListener('offline', handleOffline);
-      window.removeEventListener('popstate', handlePopState);
-      window.removeEventListener('hashchange', handlePopState);
+      window.removeEventListener('popstate', handlePopState as EventListener);
+      window.removeEventListener('hashchange', handlePopState as EventListener);
     };
   }, []);
 

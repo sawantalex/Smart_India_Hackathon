@@ -24,10 +24,19 @@ class Settings(BaseSettings):
         "http://127.0.0.1:5173"
     ]
 
+    @validator("BACKEND_CORS_ORIGINS", pre=True)
+    def assemble_cors_origins(cls, v: Union[str, List[str]]) -> Union[List[str], str]:
+        if isinstance(v, str) and not v.startswith("["):
+            return [i.strip() for i in v.split(",") if i.strip()]
+        elif isinstance(v, (list, str)):
+            return v
+        return []
+
     # Voice & AI Providers
     STT_PROVIDER: str = "browser_speech"
     TTS_PROVIDER: str = "browser_speech"
     LLM_PROVIDER: str = "mock_safe"
+    GEMINI_API_KEY: str = ""
 
     # Emergency Settings
     EMERGENCY_CONTACT_VERIFIED_DATE: str = "2026-01-01"

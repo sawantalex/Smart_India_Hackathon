@@ -32,6 +32,7 @@ export type ScreenName =
   | 'CONSENT_PRIVACY'
   | 'NOTIFICATIONS'
   | 'WORKER_LOGIN'
+  | 'ADMIN_LOGIN'
   | 'WORKER_DASHBOARD'
   | 'PATIENT_CASES'
   | 'PATIENT_DETAILS'
